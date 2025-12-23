@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+}
+
+/* We'll handle dark mode locally in components if needed, 
+   but for now we'll ensure the landing page is clean and bright */
+
+body {
+  background: white;
+  color: #0f172a;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
