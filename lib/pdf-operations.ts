@@ -1,4 +1,5 @@
 import { PDFDocument, degrees, rgb, StandardFonts } from "pdf-lib";
+import { encryptPDF as encryptPDFBytes } from "@pdfsmaller/pdf-encrypt-lite";
 
 export async function mergePDFs(files: File[]): Promise<Uint8Array> {
   const mergedPdf = await PDFDocument.create();
@@ -176,4 +177,117 @@ export function downloadImage(blob: Blob, filename: string) {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+export interface EncryptionOptions {
+  userPassword: string;
+  ownerPassword?: string;
+  permissions?: {
+    printing?: "lowResolution" | "highResolution" | "none";
+    modifying?: boolean;
+    copying?: boolean;
+    annotating?: boolean;
+    fillingForms?: boolean;
+    contentAccessibility?: boolean;
+    documentAssembly?: boolean;
+  };
+}
+
+export async function encryptPDF(
+  file: File,
+  options: EncryptionOptions
+): Promise<Uint8Array> {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdfBytes = new Uint8Array(arrayBuffer);
+  
+  // Use @pdfsmaller/pdf-encrypt-lite for encryption
+  // This library preserves all PDF content including metadata automatically
+  // API: encryptPDF(pdfBytes, userPassword, ownerPassword?)
+  const ownerPwd = options.ownerPassword || options.userPassword;
+  
+  try {
+    const encryptedBytes = await encryptPDFBytes(
+      pdfBytes,
+      options.userPassword,
+      ownerPwd
+    );
+    
+    // Verify encryption worked
+    if (encryptedBytes.length === 0) {
+      throw new Error("Encryption failed - empty result");
+    }
+    
+    return encryptedBytes;
+  } catch (error: any) {
+    throw new Error(`Failed to encrypt PDF: ${error.message || "Unknown error"}`);
+  }
+}
+
+export async function decryptPDF(
+  file: File,
+  password: string
+): Promise<Uint8Array> {
+  const arrayBuffer = await file.arrayBuffer();
+  
+  // Use PDF.js to decrypt and read the encrypted PDF
+  // PDF.js properly supports password-protected PDFs
+  const pdfjsLib = await import("pdfjs-dist");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+  
+  let pdfDoc: any;
+  try {
+    // Load encrypted PDF with password using PDF.js
+    pdfDoc = await pdfjsLib.getDocument({ 
+      data: arrayBuffer,
+      password: password 
+    }).promise;
+  } catch (error: any) {
+    const errorMsg = (error?.message || String(error)).toLowerCase();
+    if (errorMsg.includes("password") || errorMsg.includes("incorrect") || errorMsg.includes("authentication") || errorMsg.includes("encrypted")) {
+      throw new Error("Incorrect password. Please verify the password and try again.");
+    }
+    throw new Error(`Failed to decrypt PDF: ${error?.message || "Unknown error"}`);
+  }
+
+  // Now use pdf-lib to rebuild the PDF without encryption
+  // Render each page and recreate to preserve content
+  const newPdf = await PDFDocument.create();
+  const numPages = pdfDoc.numPages;
+
+  // Copy pages by rendering and recreating
+  for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+    const page = await pdfDoc.getPage(pageNum);
+    const viewport = page.getViewport({ scale: 2.0 });
+
+    // Render page to canvas
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    if (!context) continue;
+
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    await page.render({
+      canvasContext: context,
+      viewport: viewport,
+    }).promise;
+
+    // Convert canvas to image and embed in new PDF
+    const imageData = canvas.toDataURL("image/png");
+    const imageBytes = await fetch(imageData).then(res => res.arrayBuffer());
+    const image = await newPdf.embedPng(imageBytes);
+    
+    const pdfPage = newPdf.addPage([viewport.width, viewport.height]);
+    pdfPage.drawImage(image, {
+      x: 0,
+      y: 0,
+      width: viewport.width,
+      height: viewport.height,
+    });
+  }
+
+  // Save without encryption
+  return await newPdf.save({
+    useObjectStreams: true,
+  });
 }

@@ -40,10 +40,10 @@ export default function Navbar() {
             All Tools
           </Link>
           <Link href="/tools/merge" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">
-            Merge
+            Merge PDF
           </Link>
-          <Link href="/tools/split" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">
-            Split
+          <Link href="/tools/decrypt" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">
+            Unlock PDF
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/tools" className="px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-full hover:bg-blue-700 transition-all active:scale-95 shadow-lg shadow-blue-100">
@@ -147,14 +147,14 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
               className="text-base font-semibold text-slate-600 hover:text-blue-600 transition-colors py-2"
             >
-              Merge
+              Merge PDF
             </Link>
             <Link 
-              href="/tools/split" 
+              href="/tools/decrypt" 
               onClick={() => setMobileMenuOpen(false)}
               className="text-base font-semibold text-slate-600 hover:text-blue-600 transition-colors py-2"
             >
-              Split
+              Unlock PDF
             </Link>
             <div className="flex flex-col gap-3 pt-3 border-t border-slate-100">
               <Link 

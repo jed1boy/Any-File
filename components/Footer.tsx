@@ -25,6 +25,7 @@ export default function Footer() {
               <li><Link href="/tools" className="text-sm text-slate-600 hover:text-blue-600 transition-colors">All Tools</Link></li>
               <li><Link href="/tools/compress" className="text-sm text-slate-600 hover:text-blue-600 transition-colors">Compression</Link></li>
               <li><Link href="/tools/organize" className="text-sm text-slate-600 hover:text-blue-600 transition-colors">Organization</Link></li>
+              <li><Link href="/tools/encrypt" className="text-sm text-slate-600 hover:text-blue-600 transition-colors">Security</Link></li>
             </ul>
           </div>
 

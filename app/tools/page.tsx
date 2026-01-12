@@ -57,9 +57,25 @@ const tools = [
     gradient: "from-teal-500 to-cyan-500",
     category: "Edit"
   },
+  {
+    name: "Encrypt PDF",
+    description: "Add password protection and control permissions",
+    href: "/tools/encrypt",
+    gradient: "from-red-500 to-pink-500",
+    category: "Security",
+    isNew: true
+  },
+  {
+    name: "Decrypt PDF",
+    description: "Remove password protection from encrypted PDFs",
+    href: "/tools/decrypt",
+    gradient: "from-blue-500 to-indigo-500",
+    category: "Security",
+    isNew: true
+  },
 ];
 
-const categories = ["All", "Organize", "Edit", "Convert", "Optimize"];
+const categories = ["All", "Organize", "Edit", "Convert", "Optimize", "Security"];
 
 export default function ToolsPage() {
   return (
@@ -94,9 +110,16 @@ export default function ToolsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
-              <span className="absolute top-6 right-6 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-2 py-1 rounded">
-                {tool.category}
-              </span>
+              <div className="absolute top-6 right-6 flex flex-col items-end gap-2">
+                {tool.isNew && (
+                  <span className="text-[10px] font-black uppercase tracking-wider text-white bg-gradient-to-r from-red-500 to-pink-500 px-2 py-1 rounded-full shadow-lg animate-pulse">
+                    NEW
+                  </span>
+                )}
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-2 py-1 rounded">
+                  {tool.category}
+                </span>
+              </div>
             </Link>
           ))}
         </div>

@@ -9,11 +9,20 @@ const featuredTools = [
     color: "blue"
   },
   {
-    name: "Split PDF",
-    description: "Extract pages or separate a large PDF into individual files instantly.",
-    href: "/tools/split",
-    icon: "M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z",
-    color: "purple"
+    name: "Encrypt PDF",
+    description: "Secure your documents with password protection. 100% private, browser-based encryption.",
+    href: "/tools/encrypt",
+    icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z",
+    color: "red",
+    isNew: true
+  },
+  {
+    name: "Unlock PDF",
+    description: "Remove password protection from encrypted PDFs quickly and securely.",
+    href: "/tools/decrypt",
+    icon: "M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z",
+    color: "blue",
+    isNew: true
   },
   {
     name: "Compress PDF",
@@ -112,28 +121,37 @@ export default function LandingPage() {
                 href={tool.href}
                 className="group p-8 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300"
               >
-                <div
-                  className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${
-                    tool.color === "blue"
-                      ? "bg-blue-50 text-blue-600"
-                      : tool.color === "purple"
-                      ? "bg-purple-50 text-purple-600"
-                      : "bg-orange-50 text-orange-600"
-                  }`}
-                >
-                  <svg
-                    className="w-8 h-8"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                <div className="relative">
+                  <div
+                    className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${
+                      tool.color === "blue"
+                        ? "bg-blue-50 text-blue-600"
+                        : tool.color === "purple"
+                        ? "bg-purple-50 text-purple-600"
+                        : tool.color === "red"
+                        ? "bg-red-50 text-red-600"
+                        : "bg-orange-50 text-orange-600"
+                    }`}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d={tool.icon}
-                    />
-                  </svg>
+                    <svg
+                      className="w-8 h-8"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d={tool.icon}
+                      />
+                    </svg>
+                  </div>
+                  {tool.isNew && (
+                    <span className="absolute -top-1 -right-1 text-[9px] font-black uppercase tracking-wider text-white bg-gradient-to-r from-red-500 to-pink-500 px-2 py-0.5 rounded-full shadow-lg animate-pulse">
+                      NEW
+                    </span>
+                  )}
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-3">
                   {tool.name}
@@ -147,6 +165,8 @@ export default function LandingPage() {
                       ? "text-blue-600"
                       : tool.color === "purple"
                       ? "text-purple-600"
+                      : tool.color === "red"
+                      ? "text-red-600"
                       : "text-orange-600"
                   }`}
                 >
