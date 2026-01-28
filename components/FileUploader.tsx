@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { UploadCloud, File, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface FileUploaderProps {
   onFilesSelected: (files: File[]) => void;
@@ -20,13 +22,10 @@ export default function FileUploader({
   const handleFiles = useCallback(
     (files: FileList | null) => {
       if (!files) return;
-
       let fileArray = Array.from(files);
-
       if (maxFiles && fileArray.length > maxFiles) {
         fileArray = fileArray.slice(0, maxFiles);
       }
-
       onFilesSelected(fileArray);
     },
     [onFilesSelected, maxFiles]
@@ -63,45 +62,50 @@ export default function FileUploader({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${
-        isDragging
-          ? "border-blue-500 bg-blue-50 scale-105"
-          : "border-slate-300 bg-white hover:border-slate-400"
-      }`}
+      className={cn(
+        "relative group cursor-pointer overflow-hidden focus-within:outline-none focus-within:ring-2 focus-within:ring-black focus-within:ring-offset-2",
+        "border-2 border-dashed transition-all duration-300 bg-white min-h-[320px] flex flex-col items-center justify-center",
+        isDragging 
+          ? "border-black bg-slate-50 scale-[0.99]" 
+          : "border-slate-300 hover:border-black"
+      )}
     >
       <input
         type="file"
         accept={accept}
         multiple={multiple}
         onChange={handleChange}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer"
       />
-      <div className="pointer-events-none">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-          <svg
-            className="w-8 h-8 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-            />
-          </svg>
+      
+      <div className="relative z-10 flex flex-col items-center text-center p-8">
+        <div className={cn(
+          "w-12 h-12 mb-6 flex items-center justify-center transition-all duration-300 border border-slate-200 bg-slate-50",
+          isDragging 
+            ? "bg-black text-white border-black" 
+            : "text-slate-400 group-hover:text-black group-hover:border-black"
+        )}>
+          {isDragging ? (
+            <Plus className="w-6 h-6" strokeWidth={1.5} />
+          ) : (
+            <UploadCloud className="w-6 h-6" strokeWidth={1.5} />
+          )}
         </div>
-        <h3 className="text-xl font-semibold text-slate-900 mb-2">
-          {isDragging ? "Drop files here" : "Choose files or drag here"}
+        
+        <h3 className="text-lg font-bold text-black mb-2 tracking-tight uppercase">
+          {isDragging ? "Drop Files" : "Upload Source"}
         </h3>
-        <p className="text-sm text-slate-600">
+        
+        <p className="text-xs font-mono text-slate-400 uppercase tracking-wide max-w-xs mx-auto">
           {multiple
-            ? `Select ${maxFiles ? `up to ${maxFiles}` : "multiple"} files`
-            : "Select a file"}{" "}
-          to get started
+            ? `[Select ${maxFiles ? `Max ${maxFiles}` : "Multi"}]`
+            : "[Select Single File]"}{" "}
+          PDF Format
         </p>
       </div>
+
+      {/* Subtle Dot Pattern Overlay */}
+      <div className="absolute inset-0 bg-dot-pattern opacity-30 pointer-events-none" />
     </div>
   );
 }

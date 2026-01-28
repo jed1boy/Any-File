@@ -4,6 +4,8 @@ import { useState } from "react";
 import FileUploader from "@/components/FileUploader";
 import ProcessingStatus from "@/components/ProcessingStatus";
 import { addWatermark, downloadPDF } from "@/lib/pdf-operations";
+import Shell from "@/components/Shell";
+import { Button } from "@/components/ui/Button";
 
 export default function WatermarkPDF() {
   const [file, setFile] = useState<File | null>(null);
@@ -20,21 +22,13 @@ export default function WatermarkPDF() {
   };
 
   const handleAddWatermark = async () => {
-    if (!file) {
-      setStatus("error");
-      setMessage("Please select a PDF file");
-      return;
-    }
-
-    if (!watermarkText.trim()) {
-      setStatus("error");
-      setMessage("Please enter watermark text");
-      return;
-    }
+    if (!file || !watermarkText.trim()) return;
 
     try {
       setStatus("processing");
-      setMessage("Adding watermark...");
+      setMessage("Stamping document pages...");
+
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       const watermarkedPdf = await addWatermark(file, watermarkText, {
         fontSize,
@@ -45,114 +39,140 @@ export default function WatermarkPDF() {
       downloadPDF(watermarkedPdf, `watermarked-${file.name}`);
 
       setStatus("success");
-      setMessage("Watermark added successfully!");
+      setMessage("Watermark applied successfully.");
     } catch (error) {
       setStatus("error");
-      setMessage("Failed to add watermark. Please try again.");
+      setMessage("Operation failed.");
       console.error(error);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 pt-24">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">Add Watermark</h1>
-            <p className="text-slate-600">Add text watermark to your PDF pages</p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
-            <FileUploader
+    <Shell
+      title="Watermark"
+      code="EDIT_03"
+      description="Stamp text over your PDF pages. Customize size, opacity, and rotation."
+      status={status}
+      specs={[
+        { label: "Type", value: "Text Overlay" },
+        { label: "Font", value: "Helvetica Bold" }
+      ]}
+    >
+      <div className="max-w-xl mx-auto space-y-8">
+        
+        {/* Upload */}
+        <div className="space-y-4">
+           {!file ? (
+             <FileUploader
               onFilesSelected={handleFileSelected}
               accept=".pdf"
               multiple={false}
             />
-
-            {file && (
-              <div className="mt-6">
-                <div className="mb-4 p-4 bg-teal-50 rounded-lg">
-                  <p className="text-sm text-slate-700 break-words">
-                    <span className="font-semibold">File:</span> {file.name}
-                  </p>
+           ) : (
+             <div className="p-4 border border-black bg-slate-50 flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-sm truncate max-w-[200px]">{file.name}</p>
+                  <p className="font-mono text-xs text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
                 </div>
-
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-bold text-slate-900 mb-2">
-                      Watermark Text
-                    </label>
-                    <input
-                      type="text"
-                      value={watermarkText}
-                      onChange={(e) => setWatermarkText(e.target.value)}
-                      placeholder="Enter watermark text"
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-slate-900"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-slate-900 mb-2">
-                      Font Size: <span className="text-teal-600">{fontSize}px</span>
-                    </label>
-                    <input
-                      type="range"
-                      min="20"
-                      max="100"
-                      value={fontSize}
-                      onChange={(e) => setFontSize(Number(e.target.value))}
-                      className="w-full accent-teal-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-slate-900 mb-2">
-                      Opacity: <span className="text-teal-600">{(opacity * 100).toFixed(0)}%</span>
-                    </label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={opacity}
-                      onChange={(e) => setOpacity(Number(e.target.value))}
-                      className="w-full accent-teal-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-slate-900 mb-2">
-                      Rotation: <span className="text-teal-600">{rotation}°</span>
-                    </label>
-                    <input
-                      type="range"
-                      min="-90"
-                      max="90"
-                      value={rotation}
-                      onChange={(e) => setRotation(Number(e.target.value))}
-                      className="w-full accent-teal-500"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleAddWatermark}
-                  disabled={status === "processing"}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold rounded-xl hover:from-teal-600 hover:to-cyan-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                <button 
+                  onClick={() => setFile(null)}
+                  className="text-xs uppercase font-bold text-red-500 hover:underline"
                 >
-                  {status === "processing" ? "Adding Watermark..." : "Add Watermark"}
+                  Change
                 </button>
-              </div>
-            )}
-
-            {status !== "idle" && (
-              <div className="mt-6">
-                <ProcessingStatus status={status} message={message} />
-              </div>
-            )}
-          </div>
+             </div>
+           )}
         </div>
+
+        {/* Controls */}
+        {file && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+             
+             {/* Text Input */}
+             <div>
+               <label className="text-xs font-mono font-bold uppercase tracking-widest text-slate-500 mb-2 block">
+                 Watermark Text
+               </label>
+               <input 
+                 type="text" 
+                 value={watermarkText}
+                 onChange={(e) => setWatermarkText(e.target.value)}
+                 placeholder="CONFIDENTIAL"
+                 className="w-full px-4 py-3 bg-white border border-slate-300 focus:border-black rounded-none outline-none font-bold text-lg transition-colors placeholder:text-slate-300"
+               />
+             </div>
+
+             {/* Sliders */}
+             <div className="space-y-6">
+                
+                {/* Font Size */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-mono font-bold uppercase tracking-widest">
+                    <span className="text-slate-500">Font Size</span>
+                    <span>{fontSize}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="20"
+                    max="200"
+                    value={fontSize}
+                    onChange={(e) => setFontSize(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-black"
+                  />
+                </div>
+
+                {/* Opacity */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-mono font-bold uppercase tracking-widest">
+                    <span className="text-slate-500">Opacity</span>
+                    <span>{(opacity * 100).toFixed(0)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1"
+                    step="0.1"
+                    value={opacity}
+                    onChange={(e) => setOpacity(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-black"
+                  />
+                </div>
+
+                {/* Rotation */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-mono font-bold uppercase tracking-widest">
+                    <span className="text-slate-500">Rotation</span>
+                    <span>{rotation}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-90"
+                    max="90"
+                    value={rotation}
+                    onChange={(e) => setRotation(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-black"
+                  />
+                </div>
+
+             </div>
+
+             {/* Action */}
+             <div className="flex justify-end pt-4">
+               <Button
+                 onClick={handleAddWatermark}
+                 isLoading={status === "processing"}
+                 disabled={!watermarkText.trim()}
+               >
+                 Apply Watermark
+               </Button>
+             </div>
+          </div>
+        )}
+
+        {status !== "idle" && (
+           <ProcessingStatus status={status} message={message} />
+        )}
       </div>
-    </div>
+    </Shell>
   );
 }

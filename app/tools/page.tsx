@@ -1,131 +1,133 @@
 import Link from "next/link";
+import { 
+  Files, 
+  Split, 
+  Minimize2, 
+  RotateCw, 
+  Image, 
+  FileImage, 
+  ArrowUpRight, 
+  Lock, 
+  Unlock, 
+  FileText, 
+  Stamp,
+  ArrowRight
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const tools = [
   {
     name: "Merge PDF",
     description: "Combine multiple PDF files into one",
     href: "/tools/merge",
-    gradient: "from-blue-500 to-cyan-500",
+    icon: Files,
     category: "Organize"
   },
   {
     name: "Split PDF",
     description: "Extract pages or split into multiple files",
     href: "/tools/split",
-    gradient: "from-purple-500 to-pink-500",
+    icon: Split,
     category: "Organize"
   },
   {
     name: "Compress PDF",
     description: "Reduce PDF file size",
     href: "/tools/compress",
-    gradient: "from-orange-500 to-red-500",
+    icon: Minimize2,
     category: "Optimize"
   },
   {
     name: "Rotate PDF",
     description: "Rotate PDF pages",
     href: "/tools/rotate",
-    gradient: "from-green-500 to-emerald-500",
+    icon: RotateCw,
     category: "Edit"
   },
   {
     name: "PDF to Images",
     description: "Convert PDF pages to JPG or PNG",
     href: "/tools/pdf-to-images",
-    gradient: "from-indigo-500 to-blue-500",
+    icon: Image,
     category: "Convert"
   },
   {
     name: "Images to PDF",
     description: "Convert images to PDF document",
     href: "/tools/images-to-pdf",
-    gradient: "from-pink-500 to-rose-500",
+    icon: FileImage,
     category: "Convert"
   },
   {
     name: "Organize Pages",
     description: "Reorder, rotate, or delete PDF pages",
     href: "/tools/organize",
-    gradient: "from-yellow-500 to-orange-500",
+    icon: Files,
     category: "Organize"
   },
   {
     name: "Add Watermark",
     description: "Add text watermark to PDF pages",
     href: "/tools/watermark",
-    gradient: "from-teal-500 to-cyan-500",
+    icon: Stamp,
     category: "Edit"
   },
   {
     name: "Encrypt PDF",
-    description: "Add password protection and control permissions",
+    description: "Add password protection.",
     href: "/tools/encrypt",
-    gradient: "from-red-500 to-pink-500",
+    icon: Lock,
     category: "Security",
-    isNew: true
   },
   {
     name: "Decrypt PDF",
-    description: "Remove password protection from encrypted PDFs",
+    description: "Remove password protection.",
     href: "/tools/decrypt",
-    gradient: "from-blue-500 to-indigo-500",
+    icon: Unlock,
     category: "Security",
-    isNew: true
   },
   {
     name: "HTML to PDF",
-    description: "Convert HTML files or code to PDF documents",
+    description: "Convert HTML files or code.",
     href: "/tools/html-to-pdf",
-    gradient: "from-violet-500 to-purple-500",
+    icon: FileText,
     category: "Convert"
   },
 ];
 
-const categories = ["All", "Organize", "Edit", "Convert", "Optimize", "Security"];
-
 export default function ToolsPage() {
   return (
-    <div className="min-h-screen bg-slate-50 pt-24 pb-16">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">All PDF Tools</h1>
-          <p className="text-lg text-slate-600">
-            Everything you need to manage your PDF files in one place. 100% private, browser-based processing.
+    <div className="min-h-screen bg-dot-pattern pt-24 pb-16">
+      <div className="container mx-auto px-6 max-w-7xl">
+        <div className="mb-12 border-b border-black pb-6">
+          <h1 className="text-4xl font-bold text-black tracking-tight mb-2">Library</h1>
+          <p className="text-slate-500">
+            Full catalog of local PDF utilities.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-slate-200 border border-slate-200">
+          {/* Using gap-px with a background color creates a 'grid lines' effect */}
           {tools.map((tool) => (
             <Link
               key={tool.name}
               href={tool.href}
-              className="group relative flex flex-col bg-white rounded-2xl p-6 shadow-sm border border-slate-200 transition-all duration-200 hover:shadow-xl hover:-translate-y-1 active:scale-[0.98]"
+              className="group relative bg-white p-8 hover:bg-slate-50 transition-colors duration-200 flex flex-col h-full"
             >
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tool.gradient} mb-4 flex items-center justify-center text-white shadow-lg`}>
-                <span className="text-xl font-bold">{tool.name.charAt(0)}</span>
+              <div className="flex justify-between items-start mb-6">
+                 <div className="w-10 h-10 border border-slate-200 flex items-center justify-center text-black group-hover:border-black group-hover:bg-black group-hover:text-white transition-all duration-300">
+                  <tool.icon className="w-5 h-5" strokeWidth={1.5} />
+                </div>
+                <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-black transition-colors" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">
-                {tool.name}
-              </h3>
-              <p className="text-sm text-slate-600 mb-4 flex-grow">
-                {tool.description}
-              </p>
-              <div className="flex items-center text-sm font-semibold text-blue-600">
-                Open Tool
-                <svg className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-              <div className="absolute top-6 right-6 flex flex-col items-end gap-2">
-                {tool.isNew && (
-                  <span className="text-[10px] font-black uppercase tracking-wider text-white bg-gradient-to-r from-red-500 to-pink-500 px-2 py-1 rounded-full shadow-lg animate-pulse">
-                    NEW
-                  </span>
-                )}
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-2 py-1 rounded">
-                  {tool.category}
-                </span>
+              
+              <div className="mt-auto">
+                <h3 className="text-lg font-bold text-black mb-1 group-hover:underline underline-offset-4 decoration-1">
+                  {tool.name}
+                </h3>
+                <p className="text-sm text-slate-500 leading-relaxed font-mono text-xs uppercase tracking-wide">
+                  {tool.description}
+                </p>
               </div>
             </Link>
           ))}
@@ -134,4 +136,3 @@ export default function ToolsPage() {
     </div>
   );
 }
-

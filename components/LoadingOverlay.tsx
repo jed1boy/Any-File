@@ -65,17 +65,16 @@ export default function LoadingOverlay() {
     <>
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 right-0 z-[100] h-1 bg-transparent">
-        <div
-          className="h-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 transition-all duration-300 ease-out shadow-lg shadow-blue-500/50"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+                  <div 
+                    className="h-full bg-slate-950 transition-all duration-300 ease-out shadow-lg shadow-slate-900/10"
+                    style={{ width: `${progress}%` }}
+                  />      </div>
 
       {/* Blur Overlay */}
       {isLoading && (
         <div className="fixed inset-0 z-[99] bg-white/60 backdrop-blur-sm transition-all duration-200 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-slate-200 border-t-black rounded-full animate-spin" />
             <p className="text-sm font-semibold text-slate-600">Loading...</p>
           </div>
         </div>

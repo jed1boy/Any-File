@@ -5,6 +5,10 @@ import FileUploader from "@/components/FileUploader";
 import ProcessingStatus from "@/components/ProcessingStatus";
 import { extractPages, downloadPDF } from "@/lib/pdf-operations";
 import { PDFDocument } from "pdf-lib";
+import Shell from "@/components/Shell";
+import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
+import { Check, CheckCircle2 } from "lucide-react";
 
 interface PageThumbnail {
   pageNum: number;
@@ -62,7 +66,7 @@ export default function SplitPDF() {
         try {
           const pageNum = i + 1;
           const page = await pdf.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 1.0 });
+          const viewport = page.getViewport({ scale: 0.5 }); // Lower scale for thumbnails
 
           const canvas = document.createElement("canvas");
           const context = canvas.getContext("2d");
@@ -155,34 +159,28 @@ export default function SplitPDF() {
   };
 
   const handleSplit = async () => {
-    if (!file) {
-      setStatus("error");
-      setMessage("Please select a PDF file");
-      return;
-    }
+    if (!file) return;
 
     const selectedIndices = pages
       .filter((p) => p.selected)
       .map((p) => p.pageNum - 1);
 
-    if (selectedIndices.length === 0) {
-      setStatus("error");
-      setMessage("Please select at least one page");
-      return;
-    }
+    if (selectedIndices.length === 0) return;
 
     try {
       setStatus("processing");
-      setMessage("Extracting selected pages...");
+      setMessage("Extracting pages...");
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const pdf = await extractPages(file, selectedIndices);
       downloadPDF(pdf, `extracted-${file.name}`);
 
       setStatus("success");
-      setMessage("Successfully extracted selected pages into one PDF!");
+      setMessage(`Extracted ${selectedIndices.length} pages.`);
     } catch (error) {
       setStatus("error");
-      setMessage("Failed to extract pages. Please try again.");
+      setMessage("Extraction failed.");
       console.error(error);
     }
   };
@@ -190,151 +188,127 @@ export default function SplitPDF() {
   const selectedCount = pages.filter((p) => p.selected).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pt-24">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">Split PDF</h1>
-            <p className="text-slate-600">
-              Extract pages or split PDF into multiple files
-            </p>
-          </div>
+    <Shell
+      title="Split PDF"
+      code="MOD_03"
+      description="Select specific pages to extract into a new document. Click and drag to select multiple pages."
+      status={status}
+      specs={[
+        { label: "Mode", value: "Extraction" },
+        { label: "Quality", value: "Lossless" }
+      ]}
+    >
+      <div className="max-w-4xl mx-auto space-y-8">
+        
+        {!file && (
+           <FileUploader
+             onFilesSelected={handleFileSelected}
+             accept=".pdf"
+             multiple={false}
+           />
+        )}
 
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
-            <FileUploader
-              onFilesSelected={handleFileSelected}
-              accept=".pdf"
-              multiple={false}
-            />
+        {file && pageCount > 0 && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+            
+            {/* Toolbar */}
+            <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200">
+               <div className="flex items-center gap-4">
+                 <p className="text-sm font-bold text-black">{file.name}</p>
+                 <div className="h-4 w-px bg-slate-300" />
+                 <p className="text-xs font-mono text-slate-500 uppercase">{selectedCount} Selected</p>
+               </div>
+               <div className="flex gap-2">
+                 <button 
+                   onClick={selectAll}
+                   className="text-xs font-mono font-bold uppercase hover:text-black text-slate-500 transition-colors"
+                 >
+                   All
+                 </button>
+                 <span className="text-slate-300">/</span>
+                 <button 
+                   onClick={deselectAll}
+                   className="text-xs font-mono font-bold uppercase hover:text-black text-slate-500 transition-colors"
+                 >
+                   None
+                 </button>
+                 <span className="text-slate-300">/</span>
+                 <button 
+                   onClick={() => setFile(null)}
+                   className="text-xs font-mono font-bold uppercase text-red-500 hover:underline"
+                 >
+                   Reset
+                 </button>
+               </div>
+            </div>
 
-            {file && pageCount > 0 && (
-              <div className="mt-6">
-                <div className="mb-4 p-4 bg-purple-50 rounded-lg">
-                  <p className="text-sm text-slate-700 break-words">
-                    <span className="font-semibold">File:</span> {file.name}
-                  </p>
-                  <p className="text-sm text-slate-700">
-                    <span className="font-semibold">Pages:</span> {pageCount}
-                  </p>
-                  {selectedCount > 0 && (
-                    <p className="text-sm text-purple-700 font-semibold mt-1">
-                      Selected: {selectedCount} page{selectedCount !== 1 ? "s" : ""}
-                    </p>
-                  )}
-                </div>
-
-                <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={selectAll}
-                      className="px-4 py-2 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
-                    >
-                      Select All
-                    </button>
-                    <button
-                      onClick={deselectAll}
-                      className="px-4 py-2 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
-                    >
-                      Deselect All
-                    </button>
-                  </div>
-                </div>
-
-                {loadingThumbnails && (
-                  <div className="mb-4 text-center text-sm text-slate-600">
-                    Loading page previews...
-                  </div>
-                )}
-
+            {/* Grid */}
+            <div
+              ref={containerRef}
+              className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 select-none"
+              onMouseUp={handleMouseUp}
+            >
+              {pages.map((page) => (
                 <div
-                  ref={containerRef}
-                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-6"
-                  onMouseUp={handleMouseUp}
+                  key={page.pageNum}
+                  onMouseDown={() => handleMouseDown(page.pageNum)}
+                  onMouseEnter={() => handleMouseEnter(page.pageNum)}
+                  className={cn(
+                    "relative aspect-[3/4] border transition-all cursor-pointer group",
+                    page.selected 
+                      ? "border-black bg-slate-50 shadow-md ring-1 ring-black" 
+                      : "border-slate-200 bg-white hover:border-slate-400"
+                  )}
                 >
-                  {pages.map((page) => (
-                    <div
-                      key={page.pageNum}
-                      onMouseDown={() => handleMouseDown(page.pageNum)}
-                      onMouseEnter={() => handleMouseEnter(page.pageNum)}
-                      className={`relative aspect-[3/4] border-2 rounded-xl overflow-hidden cursor-pointer transition-all shadow-sm ${
-                        page.selected
-                          ? "border-purple-500 bg-purple-50 ring-4 ring-purple-100 scale-[1.02]"
-                          : "border-slate-200 bg-slate-50 hover:border-purple-300 hover:shadow-md"
-                      }`}
-                    >
-                      {page.imageUrl ? (
-                        <img
-                          src={page.imageUrl}
-                          alt={`Page ${page.pageNum}`}
-                          className="w-full h-full object-contain"
-                  />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-slate-100">
-                          <span className="text-xs text-slate-400">Page {page.pageNum}</span>
-                        </div>
-                      )}
-                      <div className="absolute top-1 right-1">
-                        {page.selected ? (
-                          <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
-                            <svg
-                              className="w-3 h-3 text-white"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={3}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          </div>
-                        ) : (
-                          <div className="w-5 h-5 border-2 border-slate-300 rounded-full bg-white" />
-                        )}
-                      </div>
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs text-center py-0.5">
-                        {page.pageNum}
-                      </div>
+                  {page.imageUrl ? (
+                    <img
+                      src={page.imageUrl}
+                      alt={`Page ${page.pageNum}`}
+                      className="w-full h-full object-contain p-2"
+                      draggable={false}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="font-mono text-xs text-slate-300">{page.pageNum}</span>
                     </div>
-                  ))}
-                </div>
-
-                {selectedCount > 0 && (
-                  <div className="mb-4 p-3 bg-purple-50 rounded-lg">
-                    <p className="text-xs font-semibold text-purple-900 mb-1">
-                      Extraction Order:
-                    </p>
-                    <p className="text-xs text-purple-700">
-                      Pages {pages
-                        .filter(p => p.selected)
-                        .map(p => p.pageNum)
-                        .join(", ")} will be merged into one file.
-                    </p>
+                  )}
+                  
+                  {/* Selection Indicator */}
+                  <div className={cn(
+                    "absolute top-2 right-2 w-4 h-4 border flex items-center justify-center transition-colors",
+                    page.selected ? "bg-black border-black" : "bg-white border-slate-200"
+                  )}>
+                    {page.selected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                   </div>
-                )}
 
-                <button
-                  onClick={handleSplit}
-                  disabled={status === "processing" || selectedCount === 0}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {status === "processing"
-                    ? "Processing..."
-                    : `Extract Selected Pages`}
-                </button>
-              </div>
-            )}
+                  {/* Page Number */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-1 text-center">
+                    <span className="font-mono text-[10px] font-bold text-slate-500">
+                      {page.pageNum}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-            {status !== "idle" && (
-              <div className="mt-6">
-                <ProcessingStatus status={status} message={message} />
-              </div>
-            )}
+            {/* Action */}
+            <div className="flex justify-end pt-4">
+              <Button
+                onClick={handleSplit}
+                isLoading={status === "processing"}
+                disabled={selectedCount === 0}
+              >
+                Extract {selectedCount} Pages
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {status !== "idle" && status !== "success" && (
+           <ProcessingStatus status={status} message={message} />
+        )}
+
       </div>
-    </div>
+    </Shell>
   );
 }

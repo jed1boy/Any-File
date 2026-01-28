@@ -324,7 +324,7 @@ export async function htmlToPDF(
       windowWidth: pageWidthPx,
       windowHeight: bodyElement.scrollHeight || pageHeightPx,
       letterRendering: true, // Better text rendering
-      onclone: (clonedDoc) => {
+      onclone: (clonedDoc: Document) => {
         // Ensure fonts are loaded in cloned document
         const clonedBody = clonedDoc.body;
         if (clonedBody) {
@@ -332,7 +332,7 @@ export async function htmlToPDF(
           clonedBody.style.lineHeight = '1.5';
         }
       },
-    });
+    } as any);
 
     // Get dimensions in mm (for A4) or inches (for Letter)
     const marginInUnit = isLetter ? margin / 96 : margin * 0.264583; // Convert px to mm

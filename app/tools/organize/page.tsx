@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import FileUploader from "@/components/FileUploader";
 import ProcessingStatus from "@/components/ProcessingStatus";
 import { organizePDF, downloadPDF } from "@/lib/pdf-operations";
 import { PDFDocument } from "pdf-lib";
+import Shell from "@/components/Shell";
+import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
+import { RotateCw, Trash2, Undo2, ArrowLeft, ArrowRight } from "lucide-react";
 
 interface PageInfo {
   index: number;
@@ -59,7 +63,7 @@ export default function OrganizePDF() {
         try {
           const pageNum = i + 1;
           const page = await pdf.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 1.0 });
+          const viewport = page.getViewport({ scale: 0.5 });
 
           const canvas = document.createElement("canvas");
           const context = canvas.getContext("2d");
@@ -130,17 +134,14 @@ export default function OrganizePDF() {
   };
 
   const handleOrganize = async () => {
-    if (!file) {
-      setStatus("error");
-      setMessage("Please select a PDF file");
-      return;
-    }
+    if (!file) return;
 
     try {
       setStatus("processing");
-      setMessage("Organizing PDF...");
+      setMessage("Restructuring document...");
 
-      // Build final page order from current state (excluding deleted pages)
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       const pageOrder = pages
         .filter((page) => !page.deleted)
         .map((page) => ({
@@ -153,10 +154,10 @@ export default function OrganizePDF() {
       downloadPDF(organizedPdf, `organized-${file.name}`);
 
       setStatus("success");
-      setMessage("PDF organized successfully!");
+      setMessage("Organization complete.");
     } catch (error) {
       setStatus("error");
-      setMessage("Failed to organize PDF. Please try again.");
+      setMessage("Organization failed.");
       console.error(error);
     }
   };
@@ -164,138 +165,139 @@ export default function OrganizePDF() {
   const activePages = pages.filter((p) => !p.deleted);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 pt-24">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">Organize Pages</h1>
-            <p className="text-slate-600">Reorder, rotate, or delete PDF pages</p>
-          </div>
+    <Shell
+      title="Organize"
+      code="EDIT_02"
+      description="Visual editor for your PDF. Reorder, rotate, or delete individual pages."
+      status={status}
+      specs={[
+        { label: "Pages", value: activePages.length.toString() },
+        { label: "Original", value: file ? (file.size/1024).toFixed(0)+"KB" : "-" }
+      ]}
+    >
+      <div className="max-w-5xl mx-auto space-y-8">
+        
+        {!file && (
+           <FileUploader
+             onFilesSelected={handleFileSelected}
+             accept=".pdf"
+             multiple={false}
+           />
+        )}
 
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
-            <FileUploader
-              onFilesSelected={handleFileSelected}
-              accept=".pdf"
-              multiple={false}
-            />
-
-            {file && pages.length > 0 && (
-              <div className="mt-6">
-                <div className="mb-4 p-4 bg-yellow-50 rounded-lg">
-                  <p className="text-sm text-slate-700 break-words">
-                    <span className="font-semibold">File:</span> {file.name}
-                  </p>
-                  <p className="text-sm text-slate-700">
-                    <span className="font-semibold">Pages:</span> {activePages.length} /{" "}
-                    {pages.length}
+        {file && pages.length > 0 && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+             {/* Toolbar */}
+             <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200">
+                <div className="flex items-center gap-4">
+                  <p className="text-sm font-bold text-black">{file.name}</p>
+                  <div className="h-4 w-px bg-slate-300" />
+                  <p className="text-xs font-mono text-slate-500 uppercase">
+                    {activePages.length} Pages Active
                   </p>
                 </div>
-
-                {loadingThumbnails && (
-                  <div className="mb-4 text-center text-sm text-slate-600">
-                    Loading page previews...
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-6">
-                  {pages.map((page, idx) => (
-                    <div
-                      key={page.index}
-                      className={`relative p-4 border-2 rounded-xl transition-all shadow-sm ${
-                        page.deleted
-                          ? "border-red-300 bg-red-50 opacity-50"
-                          : "border-slate-200 bg-white hover:border-yellow-300 hover:shadow-md"
-                      }`}
-                    >
-                      <div className="text-center mb-3">
-                        <div
-                          className="w-full aspect-[3/4] bg-slate-100 rounded-lg flex items-center justify-center mb-2 overflow-hidden border border-slate-100"
-                          style={{
-                            transform: `rotate(${page.rotation}deg)`,
-                            transition: "transform 0.3s",
-                          }}
-                        >
-                          {page.imageUrl ? (
-                            <img
-                              src={page.imageUrl}
-                              alt={`Page ${page.index + 1}`}
-                              className="w-full h-full object-contain"
-                            />
-                          ) : (
-                          <span className="text-2xl font-bold text-slate-400">
-                            {page.index + 1}
-                          </span>
-                          )}
-                        </div>
-                        <span className={`text-sm font-bold ${page.deleted ? "text-red-700" : "text-slate-700"}`}>
-                          Page {page.index + 1}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => movePage(page.index, "up")}
-                            disabled={idx === 0 || page.deleted}
-                            className="flex-1 px-3 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 transition-colors font-bold text-base"
-                            title="Move Up"
-                          >
-                            ↑
-                          </button>
-                          <button
-                            onClick={() => movePage(page.index, "down")}
-                            disabled={idx === pages.length - 1 || page.deleted}
-                            className="flex-1 px-3 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 transition-colors font-bold text-base"
-                            title="Move Down"
-                          >
-                            ↓
-                          </button>
-                        </div>
-                        <button
-                          onClick={() => rotatePage(page.index)}
-                          disabled={page.deleted}
-                          className="w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 transition-colors font-bold text-sm"
-                        >
-                          Rotate 90°
-                        </button>
-                        {page.deleted ? (
-                          <button
-                            onClick={() => restorePage(page.index)}
-                            className="w-full px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-bold text-sm"
-                          >
-                            Restore Page
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => deletePage(page.index)}
-                            className="w-full px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-bold text-sm"
-                          >
-                            Delete Page
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={handleOrganize}
-                  disabled={status === "processing"}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                <button 
+                  onClick={() => setFile(null)}
+                  className="text-xs font-mono font-bold uppercase text-red-500 hover:underline"
                 >
-                  {status === "processing" ? "Processing..." : "Apply Changes"}
+                  Reset
                 </button>
-              </div>
-            )}
+             </div>
 
-            {status !== "idle" && (
-              <div className="mt-6">
-                <ProcessingStatus status={status} message={message} />
-              </div>
-            )}
+             {/* Grid */}
+             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+               {pages.map((page, idx) => (
+                 <div
+                   key={page.index}
+                   className={cn(
+                     "relative p-4 border transition-all group bg-white",
+                     page.deleted 
+                       ? "border-red-100 opacity-50 bg-red-50/10" 
+                       : "border-slate-200 hover:border-black hover:shadow-lg"
+                   )}
+                 >
+                   {/* Thumbnail Container */}
+                   <div className="relative mb-4 aspect-[3/4] bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden">
+                     <div 
+                       className="w-full h-full flex items-center justify-center transition-transform duration-300"
+                       style={{ transform: `rotate(${page.rotation}deg)` }}
+                     >
+                        {page.imageUrl ? (
+                          <img
+                            src={page.imageUrl}
+                            alt={`Page ${page.index + 1}`}
+                            className="w-full h-full object-contain p-2"
+                          />
+                        ) : (
+                          <span className="font-mono text-xs text-slate-300">Loading...</span>
+                        )}
+                     </div>
+                     
+                     <div className="absolute top-2 left-2 bg-black text-white text-[10px] font-mono font-bold px-1.5 py-0.5">
+                       {page.index + 1}
+                     </div>
+                   </div>
+
+                   {/* Controls */}
+                   <div className="grid grid-cols-4 gap-2">
+                     <button
+                       onClick={() => movePage(page.index, "up")}
+                       disabled={idx === 0 || page.deleted}
+                       className="flex items-center justify-center p-2 bg-slate-100 hover:bg-black hover:text-white disabled:opacity-20 disabled:hover:bg-slate-100 disabled:hover:text-current transition-colors rounded-sm"
+                       title="Move Left"
+                     >
+                       <ArrowLeft className="w-3 h-3" />
+                     </button>
+                     <button
+                       onClick={() => movePage(page.index, "down")}
+                       disabled={idx === pages.length - 1 || page.deleted}
+                       className="flex items-center justify-center p-2 bg-slate-100 hover:bg-black hover:text-white disabled:opacity-20 disabled:hover:bg-slate-100 disabled:hover:text-current transition-colors rounded-sm"
+                       title="Move Right"
+                     >
+                       <ArrowRight className="w-3 h-3" />
+                     </button>
+                     <button
+                       onClick={() => rotatePage(page.index)}
+                       disabled={page.deleted}
+                       className="flex items-center justify-center p-2 bg-slate-100 hover:bg-black hover:text-white disabled:opacity-20 transition-colors rounded-sm"
+                       title="Rotate"
+                     >
+                       <RotateCw className="w-3 h-3" />
+                     </button>
+                     <button
+                       onClick={() => page.deleted ? restorePage(page.index) : deletePage(page.index)}
+                       className={cn(
+                         "flex items-center justify-center p-2 transition-colors rounded-sm",
+                         page.deleted 
+                           ? "bg-green-100 text-green-600 hover:bg-green-200" 
+                           : "bg-red-50 text-red-500 hover:bg-red-100"
+                       )}
+                       title={page.deleted ? "Restore" : "Delete"}
+                     >
+                       {page.deleted ? <Undo2 className="w-3 h-3" /> : <Trash2 className="w-3 h-3" />}
+                     </button>
+                   </div>
+                 </div>
+               ))}
+             </div>
+
+             {/* Action */}
+             <div className="flex justify-end pt-4">
+               <Button
+                 onClick={handleOrganize}
+                 isLoading={status === "processing"}
+                 disabled={activePages.length === 0}
+               >
+                 Apply Changes
+               </Button>
+             </div>
           </div>
-        </div>
+        )}
+
+        {status !== "idle" && status !== "success" && (
+           <ProcessingStatus status={status} message={message} />
+        )}
       </div>
-    </div>
+    </Shell>
   );
 }

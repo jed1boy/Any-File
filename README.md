@@ -38,7 +38,7 @@ A fast, privacy-focused PDF toolkit that runs entirely in your browser. No file 
 
 ```bash
 # Clone the repository
-git clone https://github.com/kanavtwt/pdf0.git
+git clone https://github.com/jed1boy/Any-File.git
 cd pdf0
 
 # Install dependencies
@@ -107,4 +107,4 @@ MIT License — feel free to use this project for personal or commercial purpose
 
 ## ☕ Support
 
-If you find this project useful, consider [buying me a coffee](https://buymeacoffee.com/kanavtwt)!
+If you find this project useful, consider [buying me a coffee](https://buymeacoffee.com/jzee)!

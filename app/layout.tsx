@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { Suspense } from "react";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PDF0 - Professional PDF Tools in Your Browser",
+  title: "Any-File - Professional Local PDF Tools",
   description: "Merge, split, compress, and edit PDF files with 100% privacy. Everything happens on your computer. No uploads needed.",
 };
 
@@ -28,7 +29,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-50 min-h-screen flex flex-col`}>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="https://unpkg.com/react-grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-slate-950 min-h-screen flex flex-col`}>
         <Suspense fallback={null}>
           <LoadingOverlay />
         </Suspense>
