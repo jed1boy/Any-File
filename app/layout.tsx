@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { Suspense } from "react";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +48,7 @@ export default function RootLayout({
         {children}
         </main>
         <Footer />
+        <Analytics />
       </body>
     </html>
   );
