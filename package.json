@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@pdfsmaller/pdf-encrypt-lite": "^1.0.1",
+    "@vercel/analytics": "^1.6.1",
     "clsx": "^2.1.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.0.0",
